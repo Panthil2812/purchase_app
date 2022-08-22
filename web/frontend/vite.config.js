@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { defineConfig } from "vite";
 import { dirname } from "path";
 import { fileURLToPath } from "url";

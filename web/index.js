@@ -1,21 +1,26 @@
 // @ts-check
 import { join } from "path";
 import fs from "fs";
+import bodyParser from "body-parser";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
-
+import "dotenv/config";
+import cors from "cors";
 import applyAuthMiddleware from "./middleware/auth.js";
 import verifyRequest from "./middleware/verify-request.js";
 import { setupGDPRWebHooks } from "./gdpr.js";
 import productCreator from "./helpers/product-creator.js";
 import { BillingInterval } from "./helpers/ensure-billing.js";
 import { AppInstallations } from "./app_installations.js";
-
+import { connectDB } from "./services/db/index.js";
 const USE_ONLINE_TOKENS = false;
 const TOP_LEVEL_OAUTH_COOKIE = "shopify_top_level_oauth";
+import CustomSessionStorage from "./services/session/index.js";
+import { addWebhookHandlers } from "./services/webhooks/index.js";
 
 const PORT = parseInt(process.env.BACKEND_PORT || process.env.PORT, 10);
+const sessionStorage = new CustomSessionStorage();
 
 // TODO: There should be provided by env vars
 const DEV_INDEX_PATH = `${process.cwd()}/frontend/`;
@@ -32,18 +37,25 @@ Shopify.Context.initialize({
   API_VERSION: LATEST_API_VERSION,
   IS_EMBEDDED_APP: true,
   // This should be replaced with your preferred storage strategy
-  SESSION_STORAGE: new Shopify.Session.SQLiteSessionStorage(DB_PATH),
+  // SESSION_STORAGE: new Shopify.Session.MemorySessionStorage(),
+  //SESSION_STORAGE: new Shopify.Session.SQLiteSessionStorage(DB_PATH),
+  SESSION_STORAGE: new Shopify.Session.CustomSessionStorage(
+    sessionStorage.storeCallback,
+    sessionStorage.loadCallback,
+    sessionStorage.deleteCallback,
+    sessionStorage.deleteSessionsCallback,
+    sessionStorage.findSessionsByShopCallback
+  ),
 });
 
-Shopify.Webhooks.Registry.addHandler("APP_UNINSTALLED", {
-  path: "/api/webhooks",
-  webhookHandler: async (_topic, shop, _body) => {
-    await AppInstallations.delete(shop)
-  },
-});
+// Storing the currently active shops in memory will force them to re-login when your server restarts. You should
+// persist this object in your app.
+const ACTIVE_SHOPIFY_SHOPS = {};
+global.ACTIVE_SHOPIFY_SHOPS = ACTIVE_SHOPIFY_SHOPS;
 
-// The transactions with Shopify will always be marked as test transactions, unless NODE_ENV is production.
-// See the ensureBilling helper to learn more about billing in this template.
+//Add webhook handlers
+addWebhookHandlers();
+
 const BILLING_SETTINGS = {
   required: false,
   // This is an example configuration that would do a one-time charge for $5 (only USD is currently supported)
@@ -59,7 +71,7 @@ const BILLING_SETTINGS = {
 //
 // More details can be found on shopify.dev:
 // https://shopify.dev/apps/webhooks/configuration/mandatory-webhooks
-setupGDPRWebHooks("/api/webhooks");
+// setupGDPRWebHooks("/api/webhooks");
 
 // export for test use only
 export async function createServer(
@@ -68,7 +80,16 @@ export async function createServer(
   billingSettings = BILLING_SETTINGS
 ) {
   const app = express();
+  app.use(cors());
+  app.use(
+    bodyParser.urlencoded({
+      parameterLimit: 100000,
+      limit: "50mb",
+      extended: true,
+    })
+  );
   app.set("top-level-oauth-cookie", TOP_LEVEL_OAUTH_COOKIE);
+  app.set("active-shopify-shops", ACTIVE_SHOPIFY_SHOPS);
   app.set("use-online-tokens", USE_ONLINE_TOKENS);
 
   app.use(cookieParser(Shopify.Context.API_SECRET_KEY));
@@ -185,4 +206,8 @@ export async function createServer(
   return { app };
 }
 
-createServer().then(({ app }) => app.listen(PORT));
+connectDB().then(() => {
+  createServer().then(({ app }) =>
+    app.listen(PORT, () => console.log(`Server listening on PORT: ${PORT}`))
+  );
+});
