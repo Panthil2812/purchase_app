@@ -1,86 +1,28 @@
-import {
-  Card,
-  Page,
-  Layout,
-  TextContainer,
-  Image,
-  Stack,
-  Link,
-  Heading,
-} from "@shopify/polaris";
-import { TitleBar } from "@shopify/app-bridge-react";
-
-import { trophyImage } from "../assets";
-
-import { ProductsCard } from "../components";
-
-export default function HomePage() {
+import { Navigation } from "../components";
+import { useState } from "react";
+import Dashboard from "./dashboard.jsx";
+import Subscription_rules from "./subscription_rules.jsx";
+import Subscriptions from "./subscriptions.jsx";
+import Customization from "./customization.jsx";
+function HomePage(props) {
+  const [tab_selected, setTab_Selected] = useState(props.tab ? props.tab : 3);
   return (
-    <Page narrowWidth>
-      {/* <TitleBar title="App name" primaryAction={null} /> */}
-      <Layout>
-        <Layout.Section>
-          <Card sectioned>
-            <Stack
-              wrap={false}
-              spacing="extraTight"
-              distribution="trailing"
-              alignment="center"
-            >
-              <Stack.Item fill>
-                <TextContainer spacing="loose">
-                  <Heading>Nice work on building a Shopify app 🎉</Heading>
-                  <p>
-                    Your app is ready to explore! It contains everything you
-                    need to get started including the{" "}
-                    <Link url="https://polaris.shopify.com/" external>
-                      Polaris design system
-                    </Link>
-                    ,{" "}
-                    <Link url="https://shopify.dev/api/admin-graphql" external>
-                      Shopify Admin API
-                    </Link>
-                    , and{" "}
-                    <Link
-                      url="https://shopify.dev/apps/tools/app-bridge"
-                      external
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    UI library and components.
-                  </p>
-                  <p>
-                    Ready to go? Start populating your app with some sample
-                    products to view and test in your store.{" "}
-                  </p>
-                  <p>
-                    Learn more about building out your app in{" "}
-                    <Link
-                      url="https://shopify.dev/apps/getting-started/add-functionality"
-                      external
-                    >
-                      this Shopify tutorial
-                    </Link>{" "}
-                    📚{" "}
-                  </p>
-                </TextContainer>
-              </Stack.Item>
-              <Stack.Item>
-                <div style={{ padding: "0 20px" }}>
-                  <Image
-                    source={trophyImage}
-                    alt="Nice work on building a Shopify app"
-                    width={120}
-                  />
-                </div>
-              </Stack.Item>
-            </Stack>
-          </Card>
-        </Layout.Section>
-        <Layout.Section>
-          <ProductsCard />
-        </Layout.Section>
-      </Layout>
-    </Page>
+    <>
+      <Navigation
+        // className="navigation"
+        selected={tab_selected}
+        setTab_Selected={(e) => {
+          setTab_Selected(e);
+        }}
+      />
+      <div className="main-body">
+        {tab_selected == 0 && <Dashboard />}
+        {tab_selected == 1 && <Subscription_rules />}
+        {tab_selected == 2 && <Subscriptions />}
+        {tab_selected == 3 && <Customization />}
+      </div>
+    </>
   );
 }
+
+export default HomePage;
