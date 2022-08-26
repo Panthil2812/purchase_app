@@ -60,7 +60,7 @@ const Customization = () => {
               <Card.Section subdued>
                 <Stack distribution="fill">
                   <RadioButton
-                    label={<p class="font16">Classic</p>}
+                    label={<p className="font16">Classic</p>}
                     helpText={<p className="pl5">Radio buttons</p>}
                     id="Classic"
                     name="Classic"
@@ -95,7 +95,7 @@ const Customization = () => {
               <Card.Section subdued>
                 <Stack distribution="fill">
                   <RadioButton
-                    label={<p class="font16">Compact</p>}
+                    label={<p className="font16">Compact</p>}
                     helpText={<p className="pl5">Dropdown</p>}
                     checked={value === "Compact"}
                     id="Compact"
@@ -131,7 +131,7 @@ const Customization = () => {
               <Card.Section subdued>
                 <Stack distribution="fill">
                   <RadioButton
-                    label={<p class="font16">Comfy</p>}
+                    label={<p className="font16">Comfy</p>}
                     helpText={<p className="pl5">Tiles</p>}
                     checked={value === "Comfy"}
                     id="Comfy"
@@ -167,7 +167,7 @@ const Customization = () => {
               <Card.Section subdued>
                 <Stack distribution="fill">
                   <RadioButton
-                    label={<p class="font16">Charmer</p>}
+                    label={<p className="font16">Charmer</p>}
                     helpText={<p className="pl5">Columns</p>}
                     checked={value === "Charmer"}
                     id="Charmer"

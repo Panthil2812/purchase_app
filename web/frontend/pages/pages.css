@@ -22,3 +22,6 @@
     justify-content: space-around;
     align-items: center;
 }
+.text_btn_decoration{
+    text-decoration: none;
+}
