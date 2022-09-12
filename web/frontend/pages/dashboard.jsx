@@ -17,7 +17,6 @@ const Dashboard = () => {
             <Card title="Total subscriptions" sectioned>
               <p>100 </p>
             </Card>
-
             <Card title="Monthly recurring revenue" sectioned>
               <p>₹ 2440.95 </p>
             </Card>

@@ -26,28 +26,6 @@ const Subscriptions = () => {
   ];
 
   return (
-    // <Page title="Sales by product">
-    //   <Card>
-    //     <DataTable
-    //       columnContentTypes={[
-    //         "text",
-    //         "numeric",
-    //         "numeric",
-    //         "numeric",
-    //         "numeric",
-    //       ]}
-    //       headings={[
-    //         "Product",
-    //         "Price",
-    //         "SKU Number",
-    //         "Net quantity",
-    //         "Net sales",
-    //       ]}
-    //       rows={rows}
-    //       totals={["", "", "", 255, "$155,830.00"]}
-    //     />
-    //   </Card>
-    // </Page>
     <Page title="Subscription">
       <div className="mb16">
         <Card sectioned>

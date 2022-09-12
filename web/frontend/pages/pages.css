@@ -25,3 +25,24 @@
 .text_btn_decoration{
     text-decoration: none;
 }
+.selected_products{
+    display: flex;
+    justify-content: space-between;
+}
+
+.del_div{
+    padding: 10px;
+    width: 35px;
+    height: 35px;
+    background: #fcd9d6;
+    align-items: center;
+    align-content: center;
+    border-radius: 40%;
+    
+}
+.del_div:hover{
+    padding: 6px;
+    background: #f9a19a;
+    color: #922820;
+    border: 1px solid #922820;
+}
