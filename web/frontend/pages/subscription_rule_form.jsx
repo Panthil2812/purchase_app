@@ -21,9 +21,13 @@ import {
 } from "@shopify/polaris";
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
-import { MobilePlusMajor } from "@shopify/polaris-icons";
-import { DeleteMajor } from "@shopify/polaris-icons";
-import { DropdownMinor } from "@shopify/polaris-icons";
+import {
+  DropdownMinor,
+  EditMajor,
+  DeleteMajor,
+  SearchMinor,
+  MobilePlusMajor,
+} from "@shopify/polaris-icons";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "./pages.css";
@@ -47,7 +51,8 @@ const SubscriptionRuleForm = () => {
       location: "Gwangju, South Korea",
     },
   ]);
-
+  const [planCount, setPlanCount] = useState(0);
+  const [planGroup, setPlanGroup] = useState([]);
   const CustomLinkComponent = ({ children, url, ...rest }) => {
     return (
       <Link to={url} {...rest}>
@@ -55,53 +60,10 @@ const SubscriptionRuleForm = () => {
       </Link>
     );
   };
-  const Product_Model = () => {
+  const dynamicPlanGroup = () => {
     retrun(
       <>
-        <Modal
-          open={productModelFlag}
-          onClose={() => {
-            setProductModelFlag(!productModelFlag);
-          }}
-          title="Reach more shoppers with Instagram product tags"
-          primaryAction={{
-            content: "Add Instagram",
-            onAction: () => {
-              setProductModelFlag(!productModelFlag);
-            },
-          }}
-          secondaryActions={[
-            {
-              content: "Learn more",
-              onAction: () => {
-                setProductModelFlag(!productModelFlag);
-              },
-            },
-          ]}
-        >
-          <Modal.Section>
-            <TextContainer>
-              <p>
-                Use Instagram posts to share your products with millions of
-                people. Let shoppers buy from your store without leaving Use
-                Instagram posts to share your products with millions of people.
-                Let shoppers buy from your store without leaving Use Instagram
-                posts to share your products with millions of people. Let
-                shoppers buy from your store without leaving Use Instagram posts
-                to share your products with millions of people. Let shoppers buy
-                from your store without leaving Use Instagram posts to share
-                your products with millions of people. Let shoppers buy from
-                your store without leaving Use Instagram posts to share your
-                products with millions of people. Let shoppers buy from your
-                store without leaving Use Instagram posts to share your products
-                with millions of people. Let shoppers buy from your store
-                without leaving Use Instagram posts to share your products with
-                millions of people. Let shoppers buy from your store without
-                leaving Instagram.
-              </p>
-            </TextContainer>
-          </Modal.Section>
-        </Modal>
+        <h1>panthil</h1>
       </>
     );
   };
@@ -170,9 +132,14 @@ const SubscriptionRuleForm = () => {
                 title="Subscription products"
                 description="Choose the products and variants you'd like to sell via subscription."
               >
-                <Card
-                  sectioned
-                  title={
+                <Card sectioned>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <div style={{ display: "flex" }}>
                       <h1
                         onClick={() => {
@@ -194,28 +161,21 @@ const SubscriptionRuleForm = () => {
                         />
                       </h1>
                     </div>
-                  }
-                  actions={[
-                    {
-                      content: (
-                        <Button
-                          icon={MobilePlusMajor}
-                          onClick={() => {
-                            console.log("Clicked add products");
-                            setProductModelFlag(true);
-                          }}
-                        >
-                          Add Products
-                        </Button>
-                      ),
-                    },
-                  ]}
-                >
+                    <Button
+                      icon={MobilePlusMajor}
+                      onClick={() => {
+                        console.log("Clicked add products");
+                        setProductModelFlag(true);
+                      }}
+                    >
+                      Add Products
+                    </Button>
+                  </div>
                   <Collapsible
-                    open={productShow}
-                    id="basic-collapsible"
+                    open={productShow ? productShow : false}
+                    id="productShow-collapsible"
                     transition={{
-                      duration: "500ms",
+                      duration: "200ms",
                       timingFunction: "ease-in-out",
                     }}
                     expandOnPrint
@@ -275,108 +235,294 @@ const SubscriptionRuleForm = () => {
                 title="Subscription plans"
                 description="Specify the plans belonging to this group."
               >
-                <Card title="Add another plan">
-                  <Card.Section>
-                    <TextField
-                      label="Name"
-                      onChange={(e) => {
-                        console.log("Subscribe & Save Monthly : ", e);
-                      }}
-                      placeholder="Subscribe & Save Monthly"
-                      autoComplete="off"
-                    />
-                  </Card.Section>
-                  <Card.Section title="BILLING RULES">
-                    <div style={{ paddingBottom: "8px" }}>
-                      <TextStyle>Customers are billed every</TextStyle>
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                      }}
-                    >
-                      <div style={{ width: "100%", paddingRight: "10px" }}>
-                        <TextField
-                          type="number"
-                          onChange={(e) => {
-                            console.log("numbe of day : ", e);
-                          }}
-                          autoComplete="off"
-                        />
-                      </div>
+                {planGroup?.map((data, index) => {
+                  console.log(planGroup);
+                  return (
+                    <>
+                      <Card key={data.id}>
+                        {data.open ? (
+                          <>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                padding: "20px 20px 10px 20px",
+                              }}
+                            >
+                              <h1
+                                onClick={() => {
+                                  console.log("click");
+                                  let newArr = [...planGroup];
+                                  newArr[index].open = !data?.open;
+                                  setPlanGroup(newArr);
+                                }}
+                                style={{
+                                  display: "flex",
+                                  opacity: 1,
+                                  textDecoration: "underline",
+                                  fontWeight: "600",
+                                  fontSize: "16px",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Plan - {index + 1}
+                                <Icon source={DropdownMinor} />
+                              </h1>
+                              <h1
+                                onClick={() => {
+                                  console.log("click", index);
+                                  let newArr = [...planGroup];
+                                  newArr.splice(index, 1);
+                                  setPlanGroup(newArr);
+                                }}
+                                style={{
+                                  display: "flex",
+                                  opacity: 1,
+                                  textDecoration: "underline",
+                                  fontWeight: "600",
+                                  cursor: "pointer",
+                                  color: "#d72c0d",
+                                }}
+                              >
+                                Delete Plan
+                                <div className="plan_del_div">
+                                  <Icon source={DeleteMajor} color="critical" />
+                                </div>
+                              </h1>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                padding: "20px",
+                              }}
+                            >
+                              <Heading>Plan - {index + 1}</Heading>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "end",
+                                }}
+                              >
+                                <div
+                                  className="plan_false_div"
+                                  onClick={() => {
+                                    console.log("click");
+                                    let newArr = [...planGroup];
+                                    newArr[index].open = !data?.open;
+                                    setPlanGroup(newArr);
+                                  }}
+                                  style={{
+                                    marginLeft: "0px !important",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  <Icon source={EditMajor} color="highlight" />
+                                </div>
 
-                      <Select
-                        id="ccc"
-                        placeholder="Select"
-                        options={["Day(s)", "Week(s)", "Month(s)", "Year(s)"]}
-                        onChange={(e) => {
-                          console.log("click plans select time proide", e);
-                        }}
-                      />
-                    </div>
-                  </Card.Section>
-                  <Card.Section title="DISCOUNTS">
-                    <div
-                      style={{
-                        display: "flex",
-                        marginTop: "5px",
-                        marginBottom: "20px",
+                                <div
+                                  className="plan_false_div"
+                                  onClick={() => {
+                                    console.log("click", index);
+                                    let newArr = [...planGroup];
+                                    newArr.splice(index, 1);
+                                    setPlanGroup(newArr);
+                                  }}
+                                  style={{
+                                    marginLeft: "0px !important",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  <Icon source={DeleteMajor} color="critical" />
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        <Collapsible
+                          open={data?.open ? data?.open : false}
+                          id="open-collapsible"
+                          transition={{
+                            duration: "200ms",
+                            timingFunction: "ease-in-out",
+                          }}
+                          expandOnPrint
+                        >
+                          <Card.Section>
+                            <TextField
+                              label="Name"
+                              value={data.name}
+                              onChange={(newValue) => {
+                                let newArr = [...planGroup];
+                                newArr[index].name = newValue;
+                                setPlanGroup(newArr);
+                              }}
+                              placeholder="Subscribe & Save Monthly"
+                              autoComplete="off"
+                            />
+                          </Card.Section>
+                          <Card.Section title="BILLING RULES">
+                            <div style={{ paddingBottom: "8px" }}>
+                              <TextStyle>Customers are billed every</TextStyle>
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                              }}
+                            >
+                              <div
+                                style={{ width: "100%", paddingRight: "10px" }}
+                              >
+                                <TextField
+                                  type="number"
+                                  value={data.bill_time[0]}
+                                  onChange={(newValue) => {
+                                    let newArr = [...planGroup];
+                                    newArr[index].bill_time[0] = newValue;
+                                    setPlanGroup(newArr);
+                                  }}
+                                  autoComplete="off"
+                                />
+                              </div>
+
+                              <Select
+                                id="select_bill"
+                                options={[
+                                  "Day(s)",
+                                  "Week(s)",
+                                  "Month(s)",
+                                  "Year(s)",
+                                ]}
+                                value={data.bill_time[1]}
+                                onChange={(newValue) => {
+                                  let newArr = [...planGroup];
+                                  newArr[index].bill_time[1] = newValue;
+                                  setPlanGroup(newArr);
+                                }}
+                              />
+                            </div>
+                          </Card.Section>
+                          <Card.Section title="DISCOUNTS">
+                            <div
+                              style={{
+                                display: "flex",
+                                marginTop: "5px",
+                                marginBottom: "20px",
+                              }}
+                            >
+                              <Toggle
+                                onChange={(e) => {
+                                  console.log(
+                                    "click switch : ",
+                                    e.target.checked
+                                  );
+                                  let newArr = [...planGroup];
+                                  newArr[index].discount_flag =
+                                    e.target.checked;
+                                  setPlanGroup(newArr);
+                                }}
+                                icons={false}
+                              />
+                              <div style={{ paddingLeft: "10px" }}>
+                                <TextStyle>Offer discounts?</TextStyle>
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                margin: "2px",
+                                marginBottom: "7px",
+                              }}
+                            >
+                              <Layout>
+                                <Layout.Section oneThird>
+                                  <Select
+                                    id="discount_type"
+                                    label="Discount Type"
+                                    options={[
+                                      "Fixed Amount",
+                                      "Percentage",
+                                      "Set Price",
+                                    ]}
+                                    disabled={
+                                      data?.discount_flag
+                                        ? !data?.discount_flag
+                                        : true
+                                    }
+                                    value={data.discount_type}
+                                    onChange={(newValue) => {
+                                      let newArr = [...planGroup];
+                                      newArr[index].discount_type = newValue;
+                                      setPlanGroup(newArr);
+                                    }}
+                                  />
+                                </Layout.Section>
+                                <Layout.Section oneThird>
+                                  <TextField
+                                    type="number"
+                                    label="Discount amount"
+                                    disabled={
+                                      data?.discount_flag
+                                        ? !data?.discount_flag
+                                        : true
+                                    }
+                                    value={data.discount_amount}
+                                    onChange={(newValue) => {
+                                      let newArr = [...planGroup];
+                                      newArr[index].discount_amount = newValue;
+                                      setPlanGroup(newArr);
+                                    }}
+                                    // prefix={
+                                    //   data.discount_amount != "Percentage"
+                                    //     ? "₹"
+                                    //     : ""
+                                    // }
+                                    autoComplete="off"
+                                  />
+                                </Layout.Section>
+                              </Layout>
+                            </div>
+                          </Card.Section>
+                        </Collapsible>
+                      </Card>
+                    </>
+                  );
+                })}
+                <Card sectioned>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Heading>Add another plan</Heading>
+                    <Button
+                      icon={MobilePlusMajor}
+                      onClick={() => {
+                        setPlanGroup((oldArray) => [
+                          ...oldArray,
+                          {
+                            id: (Math.random() + 1).toString(36).substring(7),
+                            open: true,
+                            name: "",
+                            bill_time: [0, "Week(s)"],
+                            discount_flag: false,
+                            discount_type: "Percentage",
+                            discount_amount: 0,
+                          },
+                        ]);
                       }}
                     >
-                      <Toggle
-                        onChange={(e) => {
-                          console.log("click switch : ", e.target.checked);
-                        }}
-                        icons={false}
-                      />
-                      <div style={{ paddingLeft: "10px" }}>
-                        <TextStyle>Offer discounts?</TextStyle>
-                      </div>
-                    </div>
-                    <Layout>
-                      <Layout.Section oneThird>
-                        <Select
-                          id="ccc"
-                          label="Discount Type"
-                          placeholder="Select"
-                          options={["Day(s)", "Week(s)", "Month(s)", "Year(s)"]}
-                          onChange={(e) => {
-                            console.log("click plans select time proide", e);
-                          }}
-                        />
-                      </Layout.Section>
-                      <Layout.Section oneThird>
-                        <TextField
-                          type="number"
-                          label="Discount amount"
-                          onChange={(e) => {
-                            console.log("numbe of day : ", e);
-                          }}
-                          suffix="%"
-                          autoComplete="off"
-                        />
-                      </Layout.Section>
-                    </Layout>
-                  </Card.Section>
+                      Add Plan
+                    </Button>
+                  </div>
                 </Card>
-                <Card
-                  sectioned
-                  title="Add another plan"
-                  actions={[
-                    {
-                      content: (
-                        <Button
-                          icon={MobilePlusMajor}
-                          onClick={() => {
-                            console.log("click add plan");
-                          }}
-                        >
-                          Add Plan
-                        </Button>
-                      ),
-                    },
-                  ]}
-                ></Card>
               </Layout.AnnotatedSection>
               <Layout.AnnotatedSection>
                 <div style={{ float: "right" }}>
@@ -405,15 +551,30 @@ const SubscriptionRuleForm = () => {
                 },
               ]}
             >
-              <Modal.Section>
-                <TextContainer>
-                  <p>
-                    Use Instagram posts to share your products with millions of
-                    peproducts with millions of people. Let shoppers buy from
-                    your store without leaving Instagram.
-                  </p>
-                </TextContainer>
-              </Modal.Section>
+              <div
+                style={{
+                  top: "0",
+                  zIndex: "20",
+                  padding: "10px 10px 5px 10px",
+                  position: "sticky",
+                  backgroundColor: "red",
+                }}
+              >
+                <TextField
+                  placeholder="Search products"
+                  onChange={() => {}}
+                  prefix={<Icon source={SearchMinor} color="base" />}
+                />
+              </div>
+              {Array.from({ length: 20 }, (_, index) => (
+                <Modal.Section key={index}>
+                  <TextContainer>
+                    <p>
+                      Item <a href="#">#{index}</a>
+                    </p>
+                  </TextContainer>
+                </Modal.Section>
+              ))}
             </Modal>
           </Page>
         </Page>

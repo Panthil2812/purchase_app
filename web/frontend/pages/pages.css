@@ -46,3 +46,10 @@
     color: #922820;
     border: 1px solid #922820;
 }
+.plan_del_div .Polaris-Icon{
+    padding: 3px;
+}
+.plan_false_div .Polaris-Icon{
+    padding: 1px;
+}
+
