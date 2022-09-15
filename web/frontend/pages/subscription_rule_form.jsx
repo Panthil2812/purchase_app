@@ -4,11 +4,14 @@ import {
   Modal,
   Card,
   Select,
+  Checkbox,
   FormLayout,
+  Thumbnail,
   TextStyle,
   TextField,
   Heading,
   Avatar,
+  Stack,
   Collapsible,
   Layout,
   TextContainer,
@@ -20,6 +23,8 @@ import {
   PageActions,
 } from "@shopify/polaris";
 import Toggle from "react-toggle";
+import { ResourcePicker } from "@shopify/app-bridge-react";
+
 import "react-toggle/style.css";
 import {
   DropdownMinor,
@@ -171,6 +176,18 @@ const SubscriptionRuleForm = () => {
                       Add Products
                     </Button>
                   </div>
+                  <ResourcePicker
+                    resourceType="Product"
+                    open={productModelFlag}
+                    onSelection={(id) => {
+                      console.log("selected", id);
+                      setProductModelFlag(!productModelFlag);
+                    }}
+                    onCancel={() => {
+                      console.log("cancelled");
+                      setProductModelFlag(!productModelFlag);
+                    }}
+                  />
                   <Collapsible
                     open={productShow ? productShow : false}
                     id="productShow-collapsible"
@@ -530,52 +547,6 @@ const SubscriptionRuleForm = () => {
                 </div>
               </Layout.AnnotatedSection>
             </Layout>
-            <Modal
-              open={productModelFlag}
-              onClose={() => {
-                setProductModelFlag(!productModelFlag);
-              }}
-              title="Add products"
-              primaryAction={{
-                content: "Add Products",
-                onAction: () => {
-                  setProductModelFlag(!productModelFlag);
-                },
-              }}
-              secondaryActions={[
-                {
-                  content: "Cancel",
-                  onAction: () => {
-                    setProductModelFlag(!productModelFlag);
-                  },
-                },
-              ]}
-            >
-              <div
-                style={{
-                  top: "0",
-                  zIndex: "20",
-                  padding: "10px 10px 5px 10px",
-                  position: "sticky",
-                  backgroundColor: "red",
-                }}
-              >
-                <TextField
-                  placeholder="Search products"
-                  onChange={() => {}}
-                  prefix={<Icon source={SearchMinor} color="base" />}
-                />
-              </div>
-              {Array.from({ length: 20 }, (_, index) => (
-                <Modal.Section key={index}>
-                  <TextContainer>
-                    <p>
-                      Item <a href="#">#{index}</a>
-                    </p>
-                  </TextContainer>
-                </Modal.Section>
-              ))}
-            </Modal>
           </Page>
         </Page>
       </AppProvider>
