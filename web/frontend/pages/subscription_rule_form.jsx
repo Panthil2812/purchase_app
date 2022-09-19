@@ -7,6 +7,7 @@ import {
   Checkbox,
   FormLayout,
   Thumbnail,
+  InlineError,
   TextStyle,
   TextField,
   Heading,
@@ -24,7 +25,7 @@ import {
 } from "@shopify/polaris";
 import Toggle from "react-toggle";
 import { ResourcePicker } from "@shopify/app-bridge-react";
-
+import { pro_img, product_img } from "../assets/index";
 import "react-toggle/style.css";
 import {
   DropdownMinor,
@@ -38,26 +39,31 @@ import { useState } from "react";
 import "./pages.css";
 const SubscriptionRuleForm = () => {
   const [loadingFlag, setloadingFlag] = useState(false);
-  const [productShow, setProductShow] = useState(true);
+  const [productShow, setProductShow] = useState(false);
   const [productModelFlag, setProductModelFlag] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState([
-    {
-      id: 145,
-      avatarSource:
-        "https://burst.shopifycdn.com/photos/freelance-designer-working-on-laptop.jpg?width=746",
-      name: "Yi So-Yeon",
-      location: "Gwangju, South Korea",
-    },
-    {
-      id: 146,
-      avatarSource:
-        "https://burst.shopifycdn.com/photos/freelance-designer-working-on-laptop.jpg?width=746",
-      name: "Products",
-      location: "Gwangju, South Korea",
-    },
-  ]);
+  const [selectedProduct, setSelectedProduct] = useState([]);
   const [planCount, setPlanCount] = useState(0);
   const [planGroup, setPlanGroup] = useState([]);
+  const [
+    productWithSpecificVariantsSelected,
+    setproductWithSpecificVariantsSelected,
+  ] = useState([]);
+  const [errorMessage, setErrorMessage] = useState({
+    in_group_name: "",
+    pu_group_name: "",
+    selectedProducts: "",
+  });
+  const [errorMessagePlans, setErrorMessagePlans] = useState([]);
+  const [formdata, setFormData] = useState({
+    in_group_name: "",
+    pu_group_name: "",
+    selectedProducts: [],
+    plans_length: 0,
+    plans: [],
+  });
+  console.log("formdata : ", formdata);
+  const [in_group_name, setIn_Group_Name] = useState("");
+  const [pu_group_name, setPu_Group_Name] = useState("");
   const CustomLinkComponent = ({ children, url, ...rest }) => {
     return (
       <Link to={url} {...rest}>
@@ -65,12 +71,30 @@ const SubscriptionRuleForm = () => {
       </Link>
     );
   };
-  const dynamicPlanGroup = () => {
-    retrun(
-      <>
-        <h1>panthil</h1>
-      </>
-    );
+  const onActionFormMethod = () => {
+    // console.log(productWithSpecificVariantsSelected);
+    setFormData({
+      in_group_name: in_group_name,
+      pu_group_name: pu_group_name,
+      selectedProducts: productWithSpecificVariantsSelected,
+      plans_length: planGroup.length,
+      plans: planGroup,
+    });
+    // setloadingFlag(true);
+    // setInterval(() => {
+    // [
+    //   {
+    //     name: "",
+    //     everybill: [],
+    //     discount: false,
+    //     discount_type: "",
+    //     discount_amount: "",
+    //   },
+    // ]
+    //   setloadingFlag(false);
+    // }, 2000);
+
+    console.log("sumbit");
   };
   return (
     <>
@@ -92,22 +116,11 @@ const SubscriptionRuleForm = () => {
           primaryAction={{
             content: "Save",
             loading: loadingFlag,
-            onAction: () => {
-              setloadingFlag(true);
-              setInterval(() => {
-                setloadingFlag(false);
-              }, 2000);
-              console.log("sumbit");
-            },
+            onAction: onActionFormMethod,
           }}
         >
           <Page fullWidth>
             <Layout>
-              <Layout.Section>
-                <Banner title="Order archived" onDismiss={() => {}}>
-                  <p>This order was archived on March 7, 2017 at 3:12pm EDT.</p>
-                </Banner>
-              </Layout.Section>
               {/* enter selling name and description */}
               <Layout.AnnotatedSection
                 id="groupDetails"
@@ -118,13 +131,21 @@ const SubscriptionRuleForm = () => {
                   <FormLayout>
                     <TextField
                       label="Internal group name"
-                      onChange={() => {}}
+                      value={in_group_name}
+                      onChange={(e) => {
+                        setIn_Group_Name(e);
+                      }}
+                      error={errorMessage.in_group_name}
                       placeholder="Subscription group for vitamins"
                       autoComplete="off"
                     />
                     <TextField
                       label="Public group name"
-                      onChange={() => {}}
+                      value={pu_group_name}
+                      error={errorMessage.pu_group_name}
+                      onChange={(e) => {
+                        setPu_Group_Name(e);
+                      }}
                       placeholder="Subscribe & Save"
                       autoComplete="off"
                     />
@@ -179,15 +200,35 @@ const SubscriptionRuleForm = () => {
                   <ResourcePicker
                     resourceType="Product"
                     open={productModelFlag}
-                    onSelection={(id) => {
-                      console.log("selected", id);
+                    initialSelectionIds={productWithSpecificVariantsSelected}
+                    onSelection={(data) => {
+                      // console.log("selected", data.selection);
+                      if (data.selection.length > 0) {
+                        let selected_id = [];
+                        for (const obj of data.selection) {
+                          const variants_id = obj.variants.map((d) => {
+                            return { id: d.id };
+                          });
+                          selected_id.push({
+                            id: obj.id,
+                            variants: variants_id,
+                          });
+                        }
+                        console.log(selected_id);
+                        setproductWithSpecificVariantsSelected(selected_id);
+                      }
+                      setSelectedProduct(data.selection);
                       setProductModelFlag(!productModelFlag);
+                      selectedProduct.length === 0
+                        ? setProductShow(!productShow)
+                        : "";
                     }}
                     onCancel={() => {
                       console.log("cancelled");
                       setProductModelFlag(!productModelFlag);
                     }}
                   />
+                  <InlineError message={errorMessage.selectedProducts} />
                   <Collapsible
                     open={productShow ? productShow : false}
                     id="productShow-collapsible"
@@ -197,7 +238,7 @@ const SubscriptionRuleForm = () => {
                     }}
                     expandOnPrint
                   >
-                    <h3>2 Products Selected</h3>
+                    <h3>{selectedProduct.length} Products Selected</h3>
                     <ResourceList
                       resourceName={{
                         singular: "customer",
@@ -205,35 +246,48 @@ const SubscriptionRuleForm = () => {
                       }}
                       items={selectedProduct}
                       renderItem={(item) => {
-                        const { id, avatarSource, name, location } = item;
-
                         return (
                           <ResourceItem
-                            id={id}
+                            id={item.id}
                             media={
                               <Avatar
                                 size="medium"
-                                name={name}
-                                source={avatarSource}
+                                name={item.title}
+                                source={
+                                  item.images.length > 0
+                                    ? item.images[0].originalSrc
+                                    : product_img
+                                }
                               />
                             }
-                            accessibilityLabel={`View details for ${name}`}
-                            name={name}
+                            accessibilityLabel={`View details for ${item.title}`}
+                            name={item.title}
                           >
                             <div className="selected_products">
                               <div>
                                 <h3>
                                   <TextStyle variation="strong">
-                                    {name}
+                                    {item.title}
                                   </TextStyle>
                                 </h3>
-                                <div>{location}</div>
+                                <div>
+                                  {item.variants.length} Variants Selected
+                                </div>
                               </div>
                               <div
                                 className="del_div"
                                 onClick={() => {
                                   console.log("click event");
-                                  console.log("id : ", id);
+                                  const index = selectedProduct.findIndex(
+                                    (element) => element.id === item.id
+                                  );
+                                  console.log("click", index);
+                                  let newArr = [...selectedProduct];
+                                  newArr.splice(index, 1);
+                                  setSelectedProduct(newArr);
+                                  newArr.length === 0
+                                    ? setProductShow(!productShow)
+                                    : "";
                                 }}
                               >
                                 <Icon source={DeleteMajor} color="critical" />
@@ -253,7 +307,6 @@ const SubscriptionRuleForm = () => {
                 description="Specify the plans belonging to this group."
               >
                 {planGroup?.map((data, index) => {
-                  console.log(planGroup);
                   return (
                     <>
                       <Card key={data.id}>
@@ -349,6 +402,9 @@ const SubscriptionRuleForm = () => {
                                     let newArr = [...planGroup];
                                     newArr.splice(index, 1);
                                     setPlanGroup(newArr);
+                                    let newArr1 = [...errorMessagePlans];
+                                    newArr1.splice(index, 1);
+                                    setErrorMessagePlans(newArr1);
                                   }}
                                   style={{
                                     marginLeft: "0px !important",
@@ -379,6 +435,7 @@ const SubscriptionRuleForm = () => {
                                 newArr[index].name = newValue;
                                 setPlanGroup(newArr);
                               }}
+                              error={errorMessagePlans[index].name}
                               placeholder="Subscribe & Save Monthly"
                               autoComplete="off"
                             />
@@ -403,6 +460,7 @@ const SubscriptionRuleForm = () => {
                                     newArr[index].bill_time[0] = newValue;
                                     setPlanGroup(newArr);
                                   }}
+                                  error={errorMessagePlans[index].bill_time}
                                   autoComplete="off"
                                 />
                               </div>
@@ -415,6 +473,11 @@ const SubscriptionRuleForm = () => {
                                   "Month(s)",
                                   "Year(s)",
                                 ]}
+                                error={
+                                  errorMessagePlans[index].bill_time
+                                    ? true
+                                    : false
+                                }
                                 value={data.bill_time[1]}
                                 onChange={(newValue) => {
                                   let newArr = [...planGroup];
@@ -471,6 +534,9 @@ const SubscriptionRuleForm = () => {
                                         ? !data?.discount_flag
                                         : true
                                     }
+                                    error={
+                                      errorMessagePlans[index].discount_type
+                                    }
                                     value={data.discount_type}
                                     onChange={(newValue) => {
                                       let newArr = [...planGroup];
@@ -488,17 +554,25 @@ const SubscriptionRuleForm = () => {
                                         ? !data?.discount_flag
                                         : true
                                     }
+                                    error={
+                                      errorMessagePlans[index].discount_amount
+                                    }
                                     value={data.discount_amount}
                                     onChange={(newValue) => {
                                       let newArr = [...planGroup];
                                       newArr[index].discount_amount = newValue;
                                       setPlanGroup(newArr);
                                     }}
-                                    // prefix={
-                                    //   data.discount_amount != "Percentage"
-                                    //     ? "₹"
-                                    //     : ""
-                                    // }
+                                    prefix={
+                                      data.discount_type != "Percentage"
+                                        ? "₹"
+                                        : ""
+                                    }
+                                    suffix={
+                                      data.discount_type != "Percentage"
+                                        ? ""
+                                        : "%"
+                                    }
                                     autoComplete="off"
                                   />
                                 </Layout.Section>
@@ -521,17 +595,31 @@ const SubscriptionRuleForm = () => {
                     <Heading>Add another plan</Heading>
                     <Button
                       icon={MobilePlusMajor}
+                      disabled={planGroup.length < 5 ? false : true}
                       onClick={() => {
+                        const u_id = (Math.random() + 1)
+                          .toString(36)
+                          .substring(7);
                         setPlanGroup((oldArray) => [
                           ...oldArray,
                           {
-                            id: (Math.random() + 1).toString(36).substring(7),
+                            id: u_id,
                             open: true,
                             name: "",
                             bill_time: [0, "Week(s)"],
                             discount_flag: false,
                             discount_type: "Percentage",
                             discount_amount: 0,
+                          },
+                        ]);
+                        setErrorMessagePlans((oldArray) => [
+                          ...oldArray,
+                          {
+                            id: u_id,
+                            name: "",
+                            bill_time: "",
+                            discount_type: "",
+                            discount_amount: "",
                           },
                         ]);
                       }}
@@ -543,7 +631,9 @@ const SubscriptionRuleForm = () => {
               </Layout.AnnotatedSection>
               <Layout.AnnotatedSection>
                 <div style={{ float: "right" }}>
-                  <Button primary>Save</Button>
+                  <Button primary onClick={onActionFormMethod}>
+                    Save
+                  </Button>
                 </div>
               </Layout.AnnotatedSection>
             </Layout>
