@@ -34,6 +34,8 @@ import {
   SearchMinor,
   MobilePlusMajor,
 } from "@shopify/polaris-icons";
+import { isEmpty } from "validator";
+
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "./pages.css";
@@ -54,14 +56,6 @@ const SubscriptionRuleForm = () => {
     selectedProducts: "",
   });
   const [errorMessagePlans, setErrorMessagePlans] = useState([]);
-  const [formdata, setFormData] = useState({
-    in_group_name: "",
-    pu_group_name: "",
-    selectedProducts: [],
-    plans_length: 0,
-    plans: [],
-  });
-  console.log("formdata : ", formdata);
   const [in_group_name, setIn_Group_Name] = useState("");
   const [pu_group_name, setPu_Group_Name] = useState("");
   const CustomLinkComponent = ({ children, url, ...rest }) => {
@@ -71,15 +65,39 @@ const SubscriptionRuleForm = () => {
       </Link>
     );
   };
-  const onActionFormMethod = () => {
+  const Form_validation = async (e) => {
+    if (
+      isEmpty(e.in_group_name, {
+        ignore_whitespace: false,
+      })
+    ) {
+      setErrorMessage({
+        ...errorMessage,
+        in_group_name: "Internal group name is required",
+      });
+    }
+    if (
+      isEmpty(e.pu_group_name, {
+        ignore_whitespace: false,
+      })
+    ) {
+      setErrorMessage({
+        ...errorMessage,
+        pu_group_name: "Public group name is required",
+      });
+    }
+  };
+  const onActionFormMethod = async () => {
     // console.log(productWithSpecificVariantsSelected);
-    setFormData({
+    const data = {
       in_group_name: in_group_name,
       pu_group_name: pu_group_name,
       selectedProducts: productWithSpecificVariantsSelected,
       plans_length: planGroup.length,
       plans: planGroup,
-    });
+    };
+    const validation_result = await Form_validation(data);
+
     // setloadingFlag(true);
     // setInterval(() => {
     // [
