@@ -6,7 +6,7 @@ import Subscriptions from "./subscriptions.jsx";
 import Customization from "./customization.jsx";
 import Subscription_Rule_Form from "./subscription_rule_form.jsx";
 function HomePage(props) {
-  console.log("props :>> ", props);
+  // console.log("props :>> ", props);
   const [tab_selected, setTab_Selected] = useState(props.tab ? props.tab : 1);
   return (
     <>

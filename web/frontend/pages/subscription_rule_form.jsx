@@ -50,14 +50,13 @@ const SubscriptionRuleForm = () => {
     productWithSpecificVariantsSelected,
     setproductWithSpecificVariantsSelected,
   ] = useState([]);
-  const [errorMessage, setErrorMessage] = useState({
-    in_group_name: "",
-    pu_group_name: "",
-    selectedProducts: "",
-  });
-  const [errorMessagePlans, setErrorMessagePlans] = useState([]);
-  const [in_group_name, setIn_Group_Name] = useState("");
+  const [error_in_group_name, setError_In_Group_Name] = useState("");
+  const [error_pu_group_name, setError_Pu_Group_Name] = useState("");
+  const [error_selected_products, setError_Selected_Products] = useState("");
+  const [error_plans_length, setError_plans_length] = useState("");
+  const [errorMessagePlans, setErrorMessagePlans] = useState("");
   const [pu_group_name, setPu_Group_Name] = useState("");
+  const [in_group_name, setIn_Group_Name] = useState("");
   const CustomLinkComponent = ({ children, url, ...rest }) => {
     return (
       <Link to={url} {...rest}>
@@ -71,20 +70,67 @@ const SubscriptionRuleForm = () => {
         ignore_whitespace: false,
       })
     ) {
-      setErrorMessage({
-        ...errorMessage,
-        in_group_name: "Internal group name is required",
-      });
+      setError_In_Group_Name("Internal group name is required");
+    } else {
+      setError_In_Group_Name(null);
     }
     if (
       isEmpty(e.pu_group_name, {
         ignore_whitespace: false,
       })
     ) {
-      setErrorMessage({
-        ...errorMessage,
-        pu_group_name: "Public group name is required",
+      setError_Pu_Group_Name("Public group name is required");
+    } else {
+      setError_Pu_Group_Name(null);
+    }
+    if (e.selectedProducts.length <= 0) {
+      setError_Selected_Products("Please select a products");
+    } else {
+      setError_Selected_Products(null);
+    }
+    if (e.plans_length <= 0) {
+      setError_plans_length("Please create one Subscription plans");
+    } else {
+      setError_plans_length(null);
+      await onErrorHandlePlansGroup(e.plans);
+    }
+  };
+  const onErrorHandlePlansGroup = async (data) => {
+    try {
+      data.map((dd, index) => {
+        if (dd.name) {
+          let newArr = [...errorMessagePlans];
+          newArr[index].name = "Please enter plans name";
+          setErrorMessagePlans(newArr);
+        } else {
+          let newArr = [...errorMessagePlans];
+          newArr[index].name = null;
+          setErrorMessagePlans(newArr);
+        }
+        if (dd.bill_time[1] === "weeks" && dd.bill_time[0] <= 0) {
+          let newArr = [...errorMessagePlans];
+          newArr[index].bill_time = "Please enter vaild bill days";
+          setErrorMessagePlans(newArr);
+        } else {
+          let newArr = [...errorMessagePlans];
+          newArr[index].name = null;
+          setErrorMessagePlans(newArr);
+        }
+        if (dd.discount_flag) {
+          if (dd.discount_amount < 0) {
+            let newArr = [...errorMessagePlans];
+            newArr[index].discount_amount =
+              "Please enter vaild discount amount";
+            setErrorMessagePlans(newArr);
+          } else {
+            let newArr = [...errorMessagePlans];
+            newArr[index].discount_amount = null;
+            setErrorMessagePlans(newArr);
+          }
+        }
       });
+    } catch (e) {
+      console.log("error onErrorHandlePlansGroup  :  ", e.message);
     }
   };
   const onActionFormMethod = async () => {
@@ -96,6 +142,7 @@ const SubscriptionRuleForm = () => {
       plans_length: planGroup.length,
       plans: planGroup,
     };
+    console.log("data : ", data);
     const validation_result = await Form_validation(data);
 
     // setloadingFlag(true);
@@ -137,208 +184,291 @@ const SubscriptionRuleForm = () => {
             onAction: onActionFormMethod,
           }}
         >
-          <Page fullWidth>
-            <Layout>
-              {/* enter selling name and description */}
-              <Layout.AnnotatedSection
-                id="groupDetails"
-                title="Group names"
-                description="Specify the names for your subscription plan group."
-              >
-                <Card sectioned title="Subscription group">
-                  <FormLayout>
-                    <TextField
-                      label="Internal group name"
-                      value={in_group_name}
-                      onChange={(e) => {
-                        setIn_Group_Name(e);
-                      }}
-                      error={errorMessage.in_group_name}
-                      placeholder="Subscription group for vitamins"
-                      autoComplete="off"
-                    />
-                    <TextField
-                      label="Public group name"
-                      value={pu_group_name}
-                      error={errorMessage.pu_group_name}
-                      onChange={(e) => {
-                        setPu_Group_Name(e);
-                      }}
-                      placeholder="Subscribe & Save"
-                      autoComplete="off"
-                    />
-                  </FormLayout>
-                </Card>
-              </Layout.AnnotatedSection>
-              {/* select products for selling group */}
-              <Layout.AnnotatedSection
-                id="select_products"
-                title="Subscription products"
-                description="Choose the products and variants you'd like to sell via subscription."
-              >
-                <Card sectioned>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
+          {/* <Page fullWidth> */}
+          <Layout>
+            {/* enter selling name and description */}
+            <Layout.AnnotatedSection
+              id="groupDetails"
+              title="Group names"
+              description="Specify the names for your subscription plan group."
+            >
+              <Card sectioned title="Subscription group">
+                <FormLayout>
+                  <TextField
+                    label="Internal group name"
+                    value={in_group_name}
+                    onChange={(e) => {
+                      setIn_Group_Name(e);
                     }}
-                  >
-                    <div style={{ display: "flex" }}>
-                      <h1
-                        onClick={() => {
-                          console.log("click");
-                          setProductShow(!productShow);
-                        }}
-                        style={{
-                          display: "flex",
-                          opacity: 1,
-                          textDecoration: "underline",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Selected products and variants
-                        <Icon
-                          source={DropdownMinor}
-                          style={{ marginLeft: "0px !important" }}
-                        />
-                      </h1>
-                    </div>
-                    <Button
-                      icon={MobilePlusMajor}
+                    error={error_in_group_name}
+                    placeholder="Subscription group for vitamins"
+                    autoComplete="off"
+                  />
+                  <TextField
+                    label="Public group name"
+                    value={pu_group_name}
+                    error={error_pu_group_name}
+                    onChange={(e) => {
+                      setPu_Group_Name(e);
+                    }}
+                    placeholder="Subscribe & Save"
+                    autoComplete="off"
+                  />
+                </FormLayout>
+              </Card>
+            </Layout.AnnotatedSection>
+            {/* select products for selling group */}
+            <Layout.AnnotatedSection
+              id="select_products"
+              title="Subscription products"
+              description="Choose the products and variants you'd like to sell via subscription."
+            >
+              <Card sectioned>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div style={{ display: "flex" }}>
+                    <h1
                       onClick={() => {
-                        console.log("Clicked add products");
-                        setProductModelFlag(true);
+                        console.log("click");
+                        setProductShow(!productShow);
+                      }}
+                      style={{
+                        display: "flex",
+                        opacity: 1,
+                        textDecoration: "underline",
+                        fontWeight: "600",
+                        cursor: "pointer",
                       }}
                     >
-                      Add Products
-                    </Button>
+                      Selected products and variants
+                      <Icon
+                        source={DropdownMinor}
+                        style={{ marginLeft: "0px !important" }}
+                      />
+                    </h1>
                   </div>
-                  <ResourcePicker
-                    resourceType="Product"
-                    open={productModelFlag}
-                    initialSelectionIds={productWithSpecificVariantsSelected}
-                    onSelection={(data) => {
-                      // console.log("selected", data.selection);
-                      if (data.selection.length > 0) {
-                        let selected_id = [];
-                        for (const obj of data.selection) {
-                          const variants_id = obj.variants.map((d) => {
-                            return { id: d.id };
-                          });
-                          selected_id.push({
-                            id: obj.id,
-                            variants: variants_id,
-                          });
-                        }
-                        console.log(selected_id);
-                        setproductWithSpecificVariantsSelected(selected_id);
-                      }
-                      setSelectedProduct(data.selection);
-                      setProductModelFlag(!productModelFlag);
-                      selectedProduct.length === 0
-                        ? setProductShow(!productShow)
-                        : "";
+                  <Button
+                    icon={MobilePlusMajor}
+                    onClick={() => {
+                      console.log("Clicked add products");
+                      setProductModelFlag(true);
                     }}
-                    onCancel={() => {
-                      console.log("cancelled");
-                      setProductModelFlag(!productModelFlag);
-                    }}
-                  />
-                  <InlineError message={errorMessage.selectedProducts} />
-                  <Collapsible
-                    open={productShow ? productShow : false}
-                    id="productShow-collapsible"
-                    transition={{
-                      duration: "200ms",
-                      timingFunction: "ease-in-out",
-                    }}
-                    expandOnPrint
                   >
-                    <h3>{selectedProduct.length} Products Selected</h3>
-                    <ResourceList
-                      resourceName={{
-                        singular: "customer",
-                        plural: "customers",
-                      }}
-                      items={selectedProduct}
-                      renderItem={(item) => {
-                        return (
-                          <ResourceItem
-                            id={item.id}
-                            media={
-                              <Avatar
-                                size="medium"
-                                name={item.title}
-                                source={
-                                  item.images.length > 0
-                                    ? item.images[0].originalSrc
-                                    : product_img
-                                }
-                              />
-                            }
-                            accessibilityLabel={`View details for ${item.title}`}
-                            name={item.title}
-                          >
-                            <div className="selected_products">
+                    Add Products
+                  </Button>
+                </div>
+                <ResourcePicker
+                  resourceType="Product"
+                  open={productModelFlag}
+                  initialSelectionIds={productWithSpecificVariantsSelected}
+                  onSelection={(data) => {
+                    // console.log("selected", data.selection);
+                    if (data.selection.length > 0) {
+                      let selected_id = [];
+                      for (const obj of data.selection) {
+                        const variants_id = obj.variants.map((d) => {
+                          return { id: d.id };
+                        });
+                        selected_id.push({
+                          id: obj.id,
+                          variants: variants_id,
+                        });
+                      }
+                      console.log(selected_id);
+                      setproductWithSpecificVariantsSelected(selected_id);
+                    }
+                    setSelectedProduct(data.selection);
+                    setProductModelFlag(!productModelFlag);
+                    selectedProduct.length === 0
+                      ? setProductShow(!productShow)
+                      : "";
+                  }}
+                  onCancel={() => {
+                    console.log("cancelled");
+                    setProductModelFlag(!productModelFlag);
+                  }}
+                />
+                <InlineError message={error_selected_products} />
+                <Collapsible
+                  open={productShow ? productShow : false}
+                  id="productShow-collapsible"
+                  transition={{
+                    duration: "200ms",
+                    timingFunction: "ease-in-out",
+                  }}
+                  expandOnPrint
+                >
+                  <h3>{selectedProduct.length} Products Selected</h3>
+                  <ResourceList
+                    resourceName={{
+                      singular: "customer",
+                      plural: "customers",
+                    }}
+                    items={selectedProduct}
+                    renderItem={(item) => {
+                      return (
+                        <ResourceItem
+                          id={item.id}
+                          media={
+                            <Avatar
+                              size="medium"
+                              name={item.title}
+                              source={
+                                item.images.length > 0
+                                  ? item.images[0].originalSrc
+                                  : product_img
+                              }
+                            />
+                          }
+                          accessibilityLabel={`View details for ${item.title}`}
+                          name={item.title}
+                        >
+                          <div className="selected_products">
+                            <div>
+                              <h3>
+                                <TextStyle variation="strong">
+                                  {item.title}
+                                </TextStyle>
+                              </h3>
                               <div>
-                                <h3>
-                                  <TextStyle variation="strong">
-                                    {item.title}
-                                  </TextStyle>
-                                </h3>
-                                <div>
-                                  {item.variants.length} Variants Selected
-                                </div>
-                              </div>
-                              <div
-                                className="del_div"
-                                onClick={() => {
-                                  console.log("click event");
-                                  const index = selectedProduct.findIndex(
-                                    (element) => element.id === item.id
-                                  );
-                                  console.log("click", index);
-                                  let newArr = [...selectedProduct];
-                                  newArr.splice(index, 1);
-                                  setSelectedProduct(newArr);
-                                  newArr.length === 0
-                                    ? setProductShow(!productShow)
-                                    : "";
-                                }}
-                              >
-                                <Icon source={DeleteMajor} color="critical" />
+                                {item.variants.length} Variants Selected
                               </div>
                             </div>
-                          </ResourceItem>
-                        );
-                      }}
-                    />
-                  </Collapsible>
-                </Card>
-              </Layout.AnnotatedSection>
-              {/* create a new plan */}
-              <Layout.AnnotatedSection
-                id="plansDetails"
-                title="Subscription plans"
-                description="Specify the plans belonging to this group."
-              >
-                {planGroup?.map((data, index) => {
-                  return (
-                    <>
-                      <Card key={data.id}>
-                        {data.open ? (
-                          <>
+                            <div
+                              className="del_div"
+                              onClick={() => {
+                                console.log("click event");
+                                console.log("item : ", item.id);
+                                console.log(
+                                  "productWithSpecificVariantsSelected : ",
+                                  productWithSpecificVariantsSelected
+                                );
+                                const index = selectedProduct.findIndex(
+                                  (element) => element.id === item.id
+                                );
+                                // console.log("click", index);
+                                let newArr = [...selectedProduct];
+                                newArr.splice(index, 1);
+                                setSelectedProduct(newArr);
+                                newArr.length === 0
+                                  ? setProductShow(!productShow)
+                                  : "";
+                                //productWithSpecificVariantsSelected delete  id
+                                const index_svs =
+                                  productWithSpecificVariantsSelected.findIndex(
+                                    (element) => element.id === item.id
+                                  );
+                                console.log("click", index_svs);
+                                let newSvs = [
+                                  ...productWithSpecificVariantsSelected,
+                                ];
+                                newSvs.splice(index, 1);
+                                setproductWithSpecificVariantsSelected(newSvs);
+                                newSvs.length === 0
+                                  ? setProductShow(!productShow)
+                                  : "";
+                                console.log(
+                                  "productWithSpecificVariantsSelected after: ",
+                                  productWithSpecificVariantsSelected
+                                );
+                              }}
+                            >
+                              <Icon source={DeleteMajor} color="critical" />
+                            </div>
+                          </div>
+                        </ResourceItem>
+                      );
+                    }}
+                  />
+                </Collapsible>
+              </Card>
+            </Layout.AnnotatedSection>
+            {/* create a new plan */}
+            <Layout.AnnotatedSection
+              id="plansDetails"
+              title="Subscription plans"
+              description="Specify the plans belonging to this group."
+            >
+              {planGroup?.map((data, index) => {
+                return (
+                  <>
+                    <Card key={data.id}>
+                      {data.open ? (
+                        <>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "20px 20px 10px 20px",
+                            }}
+                          >
+                            <h1
+                              onClick={() => {
+                                console.log("click");
+                                let newArr = [...planGroup];
+                                newArr[index].open = !data?.open;
+                                setPlanGroup(newArr);
+                              }}
+                              style={{
+                                display: "flex",
+                                opacity: 1,
+                                textDecoration: "underline",
+                                fontWeight: "600",
+                                fontSize: "16px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Plan - {index + 1}
+                              <Icon source={DropdownMinor} />
+                            </h1>
+                            <h1
+                              onClick={() => {
+                                console.log("click", index);
+                                let newArr = [...planGroup];
+                                newArr.splice(index, 1);
+                                setPlanGroup(newArr);
+                              }}
+                              style={{
+                                display: "flex",
+                                opacity: 1,
+                                textDecoration: "underline",
+                                fontWeight: "600",
+                                cursor: "pointer",
+                                color: "#d72c0d",
+                              }}
+                            >
+                              Delete Plan
+                              <div className="plan_del_div">
+                                <Icon source={DeleteMajor} color="critical" />
+                              </div>
+                            </h1>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "20px",
+                            }}
+                          >
+                            <Heading>Plan - {index + 1}</Heading>
                             <div
                               style={{
                                 display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                padding: "20px 20px 10px 20px",
+                                justifyContent: "end",
                               }}
                             >
-                              <h1
+                              <div
+                                className="plan_false_div"
                                 onClick={() => {
                                   console.log("click");
                                   let newArr = [...planGroup];
@@ -346,316 +476,254 @@ const SubscriptionRuleForm = () => {
                                   setPlanGroup(newArr);
                                 }}
                                 style={{
-                                  display: "flex",
-                                  opacity: 1,
-                                  textDecoration: "underline",
-                                  fontWeight: "600",
-                                  fontSize: "16px",
+                                  marginLeft: "0px !important",
                                   cursor: "pointer",
                                 }}
                               >
-                                Plan - {index + 1}
-                                <Icon source={DropdownMinor} />
-                              </h1>
-                              <h1
+                                <Icon source={EditMajor} color="highlight" />
+                              </div>
+
+                              <div
+                                className="plan_false_div"
                                 onClick={() => {
                                   console.log("click", index);
                                   let newArr = [...planGroup];
                                   newArr.splice(index, 1);
                                   setPlanGroup(newArr);
+                                  let newArr1 = [...errorMessagePlans];
+                                  newArr1.splice(index, 1);
+                                  setErrorMessagePlans(newArr1);
                                 }}
                                 style={{
-                                  display: "flex",
-                                  opacity: 1,
-                                  textDecoration: "underline",
-                                  fontWeight: "600",
+                                  marginLeft: "0px !important",
                                   cursor: "pointer",
-                                  color: "#d72c0d",
                                 }}
                               >
-                                Delete Plan
-                                <div className="plan_del_div">
-                                  <Icon source={DeleteMajor} color="critical" />
-                                </div>
-                              </h1>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                padding: "20px",
-                              }}
-                            >
-                              <Heading>Plan - {index + 1}</Heading>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "end",
-                                }}
-                              >
-                                <div
-                                  className="plan_false_div"
-                                  onClick={() => {
-                                    console.log("click");
-                                    let newArr = [...planGroup];
-                                    newArr[index].open = !data?.open;
-                                    setPlanGroup(newArr);
-                                  }}
-                                  style={{
-                                    marginLeft: "0px !important",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  <Icon source={EditMajor} color="highlight" />
-                                </div>
-
-                                <div
-                                  className="plan_false_div"
-                                  onClick={() => {
-                                    console.log("click", index);
-                                    let newArr = [...planGroup];
-                                    newArr.splice(index, 1);
-                                    setPlanGroup(newArr);
-                                    let newArr1 = [...errorMessagePlans];
-                                    newArr1.splice(index, 1);
-                                    setErrorMessagePlans(newArr1);
-                                  }}
-                                  style={{
-                                    marginLeft: "0px !important",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  <Icon source={DeleteMajor} color="critical" />
-                                </div>
+                                <Icon source={DeleteMajor} color="critical" />
                               </div>
                             </div>
-                          </>
-                        )}
-                        <Collapsible
-                          open={data?.open ? data?.open : false}
-                          id="open-collapsible"
-                          transition={{
-                            duration: "200ms",
-                            timingFunction: "ease-in-out",
-                          }}
-                          expandOnPrint
-                        >
-                          <Card.Section>
-                            <TextField
-                              label="Name"
-                              value={data.name}
-                              onChange={(newValue) => {
-                                let newArr = [...planGroup];
-                                newArr[index].name = newValue;
-                                setPlanGroup(newArr);
-                              }}
-                              error={errorMessagePlans[index].name}
-                              placeholder="Subscribe & Save Monthly"
-                              autoComplete="off"
-                            />
-                          </Card.Section>
-                          <Card.Section title="BILLING RULES">
-                            <div style={{ paddingBottom: "8px" }}>
-                              <TextStyle>Customers are billed every</TextStyle>
-                            </div>
+                          </div>
+                        </>
+                      )}
+                      <Collapsible
+                        open={data?.open ? data?.open : false}
+                        id="open-collapsible"
+                        transition={{
+                          duration: "200ms",
+                          timingFunction: "ease-in-out",
+                        }}
+                        expandOnPrint
+                      >
+                        <Card.Section>
+                          <TextField
+                            label="Name"
+                            value={data.name}
+                            onChange={(newValue) => {
+                              let newArr = [...planGroup];
+                              newArr[index].name = newValue;
+                              setPlanGroup(newArr);
+                            }}
+                            error={errorMessagePlans[index].name}
+                            placeholder="Subscribe & Save Monthly"
+                            autoComplete="off"
+                          />
+                        </Card.Section>
+                        <Card.Section title="BILLING RULES">
+                          <div style={{ paddingBottom: "8px" }}>
+                            <TextStyle>Customers are billed every</TextStyle>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                            }}
+                          >
                             <div
-                              style={{
-                                display: "flex",
-                              }}
+                              style={{ width: "100%", paddingRight: "10px" }}
                             >
-                              <div
-                                style={{ width: "100%", paddingRight: "10px" }}
-                              >
-                                <TextField
-                                  type="number"
-                                  value={data.bill_time[0]}
-                                  onChange={(newValue) => {
-                                    let newArr = [...planGroup];
-                                    newArr[index].bill_time[0] = newValue;
-                                    setPlanGroup(newArr);
-                                  }}
-                                  error={errorMessagePlans[index].bill_time}
-                                  autoComplete="off"
-                                />
-                              </div>
-
-                              <Select
-                                id="select_bill"
-                                options={[
-                                  "Day(s)",
-                                  "Week(s)",
-                                  "Month(s)",
-                                  "Year(s)",
-                                ]}
-                                error={
-                                  errorMessagePlans[index].bill_time
-                                    ? true
-                                    : false
-                                }
-                                value={data.bill_time[1]}
+                              <TextField
+                                type="number"
+                                value={data.bill_time[0]}
                                 onChange={(newValue) => {
                                   let newArr = [...planGroup];
-                                  newArr[index].bill_time[1] = newValue;
+                                  newArr[index].bill_time[0] = newValue;
                                   setPlanGroup(newArr);
                                 }}
+                                error={errorMessagePlans[index].bill_time}
+                                autoComplete="off"
                               />
-                            </div>
-                          </Card.Section>
-                          <Card.Section title="DISCOUNTS">
-                            <div
-                              style={{
-                                display: "flex",
-                                marginTop: "5px",
-                                marginBottom: "20px",
-                              }}
-                            >
-                              <Toggle
-                                onChange={(e) => {
-                                  console.log(
-                                    "click switch : ",
-                                    e.target.checked
-                                  );
-                                  let newArr = [...planGroup];
-                                  newArr[index].discount_flag =
-                                    e.target.checked;
-                                  setPlanGroup(newArr);
-                                }}
-                                icons={false}
-                              />
-                              <div style={{ paddingLeft: "10px" }}>
-                                <TextStyle>Offer discounts?</TextStyle>
-                              </div>
                             </div>
 
-                            <div
-                              style={{
-                                margin: "2px",
-                                marginBottom: "7px",
+                            <Select
+                              id="select_bill"
+                              options={[
+                                "Day(s)",
+                                "Week(s)",
+                                "Month(s)",
+                                "Year(s)",
+                              ]}
+                              error={
+                                errorMessagePlans[index].bill_time
+                                  ? true
+                                  : false
+                              }
+                              value={data.bill_time[1]}
+                              onChange={(newValue) => {
+                                let newArr = [...planGroup];
+                                newArr[index].bill_time[1] = newValue;
+                                setPlanGroup(newArr);
                               }}
-                            >
-                              <Layout>
-                                <Layout.Section oneThird>
-                                  <Select
-                                    id="discount_type"
-                                    label="Discount Type"
-                                    options={[
-                                      "Fixed Amount",
-                                      "Percentage",
-                                      "Set Price",
-                                    ]}
-                                    disabled={
-                                      data?.discount_flag
-                                        ? !data?.discount_flag
-                                        : true
-                                    }
-                                    error={
-                                      errorMessagePlans[index].discount_type
-                                    }
-                                    value={data.discount_type}
-                                    onChange={(newValue) => {
-                                      let newArr = [...planGroup];
-                                      newArr[index].discount_type = newValue;
-                                      setPlanGroup(newArr);
-                                    }}
-                                  />
-                                </Layout.Section>
-                                <Layout.Section oneThird>
-                                  <TextField
-                                    type="number"
-                                    label="Discount amount"
-                                    disabled={
-                                      data?.discount_flag
-                                        ? !data?.discount_flag
-                                        : true
-                                    }
-                                    error={
-                                      errorMessagePlans[index].discount_amount
-                                    }
-                                    value={data.discount_amount}
-                                    onChange={(newValue) => {
-                                      let newArr = [...planGroup];
-                                      newArr[index].discount_amount = newValue;
-                                      setPlanGroup(newArr);
-                                    }}
-                                    prefix={
-                                      data.discount_type != "Percentage"
-                                        ? "₹"
-                                        : ""
-                                    }
-                                    suffix={
-                                      data.discount_type != "Percentage"
-                                        ? ""
-                                        : "%"
-                                    }
-                                    autoComplete="off"
-                                  />
-                                </Layout.Section>
-                              </Layout>
+                            />
+                          </div>
+                        </Card.Section>
+                        <Card.Section title="DISCOUNTS">
+                          <div
+                            style={{
+                              display: "flex",
+                              marginTop: "5px",
+                              marginBottom: "20px",
+                            }}
+                          >
+                            <Toggle
+                              onChange={(e) => {
+                                console.log(
+                                  "click switch : ",
+                                  e.target.checked
+                                );
+                                let newArr = [...planGroup];
+                                newArr[index].discount_flag = e.target.checked;
+                                setPlanGroup(newArr);
+                              }}
+                              icons={false}
+                            />
+                            <div style={{ paddingLeft: "10px" }}>
+                              <TextStyle>Offer discounts?</TextStyle>
                             </div>
-                          </Card.Section>
-                        </Collapsible>
-                      </Card>
-                    </>
-                  );
-                })}
-                <Card sectioned>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
+                          </div>
+
+                          <div
+                            style={{
+                              margin: "2px",
+                              marginBottom: "7px",
+                            }}
+                          >
+                            <Layout>
+                              <Layout.Section oneThird>
+                                <Select
+                                  id="discount_type"
+                                  label="Discount Type"
+                                  options={[
+                                    "Fixed Amount",
+                                    "Percentage",
+                                    "Set Price",
+                                  ]}
+                                  disabled={
+                                    data?.discount_flag
+                                      ? !data?.discount_flag
+                                      : true
+                                  }
+                                  error={errorMessagePlans[index].discount_type}
+                                  value={data.discount_type}
+                                  onChange={(newValue) => {
+                                    let newArr = [...planGroup];
+                                    newArr[index].discount_type = newValue;
+                                    setPlanGroup(newArr);
+                                  }}
+                                />
+                              </Layout.Section>
+                              <Layout.Section oneThird>
+                                <TextField
+                                  type="number"
+                                  label="Discount amount"
+                                  disabled={
+                                    data?.discount_flag
+                                      ? !data?.discount_flag
+                                      : true
+                                  }
+                                  error={
+                                    errorMessagePlans[index].discount_amount
+                                  }
+                                  value={data.discount_amount}
+                                  onChange={(newValue) => {
+                                    let newArr = [...planGroup];
+                                    newArr[index].discount_amount = newValue;
+                                    setPlanGroup(newArr);
+                                  }}
+                                  prefix={
+                                    data.discount_type != "Percentage"
+                                      ? "₹"
+                                      : ""
+                                  }
+                                  suffix={
+                                    data.discount_type != "Percentage"
+                                      ? ""
+                                      : "%"
+                                  }
+                                  autoComplete="off"
+                                />
+                              </Layout.Section>
+                            </Layout>
+                          </div>
+                        </Card.Section>
+                      </Collapsible>
+                    </Card>
+                  </>
+                );
+              })}
+              <Card sectioned>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Heading>Add another plan</Heading>
+                  <Button
+                    icon={MobilePlusMajor}
+                    disabled={planGroup.length < 5 ? false : true}
+                    onClick={() => {
+                      const u_id = (Math.random() + 1)
+                        .toString(36)
+                        .substring(7);
+                      setPlanGroup((oldArray) => [
+                        ...oldArray,
+                        {
+                          id: u_id,
+                          open: true,
+                          name: "",
+                          bill_time: [0, "Week(s)"],
+                          discount_flag: false,
+                          discount_type: "Percentage",
+                          discount_amount: 0,
+                        },
+                      ]);
+                      setErrorMessagePlans((oldArray) => [
+                        ...oldArray,
+                        {
+                          id: u_id,
+                          name: "",
+                          bill_time: "",
+                          discount_type: "",
+                          discount_amount: "",
+                        },
+                      ]);
                     }}
                   >
-                    <Heading>Add another plan</Heading>
-                    <Button
-                      icon={MobilePlusMajor}
-                      disabled={planGroup.length < 5 ? false : true}
-                      onClick={() => {
-                        const u_id = (Math.random() + 1)
-                          .toString(36)
-                          .substring(7);
-                        setPlanGroup((oldArray) => [
-                          ...oldArray,
-                          {
-                            id: u_id,
-                            open: true,
-                            name: "",
-                            bill_time: [0, "Week(s)"],
-                            discount_flag: false,
-                            discount_type: "Percentage",
-                            discount_amount: 0,
-                          },
-                        ]);
-                        setErrorMessagePlans((oldArray) => [
-                          ...oldArray,
-                          {
-                            id: u_id,
-                            name: "",
-                            bill_time: "",
-                            discount_type: "",
-                            discount_amount: "",
-                          },
-                        ]);
-                      }}
-                    >
-                      Add Plan
-                    </Button>
-                  </div>
-                </Card>
-              </Layout.AnnotatedSection>
-              <Layout.AnnotatedSection>
-                <div style={{ float: "right" }}>
-                  <Button primary onClick={onActionFormMethod}>
-                    Save
+                    Add Plan
                   </Button>
                 </div>
-              </Layout.AnnotatedSection>
-            </Layout>
-          </Page>
+                <InlineError message={error_plans_length} />
+              </Card>
+            </Layout.AnnotatedSection>
+            <Layout.AnnotatedSection>
+              <div style={{ float: "right" }}>
+                <Button primary onClick={onActionFormMethod}>
+                  Save
+                </Button>
+              </div>
+            </Layout.AnnotatedSection>
+          </Layout>
+          {/* </Page> */}
         </Page>
       </AppProvider>
     </>

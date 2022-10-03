@@ -47,7 +47,7 @@ Shopify.Context.initialize({
     sessionStorage.findSessionsByShopCallback
   ),
 });
-
+console.log("process.env.SCOPES : ", process.env.SCOPES);
 // Storing the currently active shops in memory will force them to re-login when your server restarts. You should
 // persist this object in your app.
 const ACTIVE_SHOPIFY_SHOPS = {};

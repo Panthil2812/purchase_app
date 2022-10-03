@@ -16,6 +16,7 @@ export default function applyAuthMiddleware(
   { billing = { required: false } } = { billing: { required: false } }
 ) {
   app.get("/api/auth", async (req, res) => {
+    console.log("/api/auth");
     if (!req.query.shop) {
       res.status(500);
       return res.send("No shop provided");
@@ -37,6 +38,7 @@ export default function applyAuthMiddleware(
   });
 
   app.get("/api/auth/toplevel", (req, res) => {
+    console.log("/api/auth/toplevel");
     res.cookie(app.get("top-level-oauth-cookie"), "1", {
       signed: true,
       httpOnly: true,
@@ -56,6 +58,7 @@ export default function applyAuthMiddleware(
 
   app.get("/api/auth/callback", async (req, res) => {
     try {
+      console.log("/api/auth/callback");
       const session = await Shopify.Auth.validateAuthCallback(
         req,
         res,
