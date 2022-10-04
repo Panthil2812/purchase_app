@@ -34,7 +34,7 @@ import {
   SearchMinor,
   MobilePlusMajor,
 } from "@shopify/polaris-icons";
-import { isEmpty } from "validator";
+import { isEmpty, equals } from "validator";
 
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
@@ -93,41 +93,94 @@ const SubscriptionRuleForm = () => {
     } else {
       setError_plans_length(null);
       await onErrorHandlePlansGroup(e.plans);
+      console.log("errorMessagePlans", errorMessagePlans);
     }
   };
   const onErrorHandlePlansGroup = async (data) => {
     try {
-      data.map((dd, index) => {
-        if (dd.name) {
-          let newArr = [...errorMessagePlans];
+      data.map(async (data, index) => {
+        let newArr = [...errorMessagePlans];
+        let error = 0;
+        console.log("dd : ", data);
+        if (
+          isEmpty(data.name, {
+            ignore_whitespace: false,
+          })
+        ) {
           newArr[index].name = "Please enter plans name";
-          setErrorMessagePlans(newArr);
         } else {
-          let newArr = [...errorMessagePlans];
-          newArr[index].name = null;
-          setErrorMessagePlans(newArr);
+          newArr[index].name = "";
         }
-        if (dd.bill_time[1] === "weeks" && dd.bill_time[0] <= 0) {
-          let newArr = [...errorMessagePlans];
-          newArr[index].bill_time = "Please enter vaild bill days";
-          setErrorMessagePlans(newArr);
-        } else {
-          let newArr = [...errorMessagePlans];
-          newArr[index].name = null;
-          setErrorMessagePlans(newArr);
-        }
-        if (dd.discount_flag) {
-          if (dd.discount_amount < 0) {
-            let newArr = [...errorMessagePlans];
+        if (data.discount_flag) {
+          if (data.discount_amount <= 0) {
             newArr[index].discount_amount =
               "Please enter vaild discount amount";
-            setErrorMessagePlans(newArr);
           } else {
-            let newArr = [...errorMessagePlans];
-            newArr[index].discount_amount = null;
-            setErrorMessagePlans(newArr);
+            newArr[index].discount_amount = "";
           }
         }
+        if (equals(data.bill_time[1], "Week(s)")) {
+          if (data.bill_time[0] > 0 && data.bill_time[0] <= 7) {
+            newArr[index].bill_time = "";
+          } else {
+            newArr[index].bill_time = "Please enter vaild bill week days";
+          }
+        } else if (equals(data.bill_time[1], "Day(s)")) {
+          if (data.bill_time[0] > 0 && data.bill_time[0] <= 365) {
+            newArr[index].bill_time = "";
+          } else {
+            newArr[index].bill_time = "Please enter vaild bill days";
+          }
+        } else if (equals(data.bill_time[1], "Month(s)")) {
+          if (data.bill_time[0] > 0 && data.bill_time[0] <= 12) {
+            newArr[index].bill_time = "";
+          } else {
+            newArr[index].bill_time = "Please enter vaild bill month";
+          }
+        } else if (equals(data.bill_time[1], "Year(s)")) {
+          if (data.bill_time[0] > 0 && data.bill_time[0] <= 2) {
+            newArr[index].bill_time = "";
+          } else {
+            newArr[index].bill_time = "Please enter vaild year number";
+          }
+        }
+        console.log(`string : ${
+          newArr[index].name
+        }, \nisEmpty(newArr[index].name, {
+          ignore_whitespace: false,
+        }) : ${isEmpty(newArr[index].name, {
+          ignore_whitespace: false,
+        })}`);
+        console.log(`string : ${
+          newArr[index].discount_amount
+        }, \nisEmpty(newArr[index].discount_amount, {
+          ignore_whitespace: false,
+        }) : ${isEmpty(newArr[index].discount_amount, {
+          ignore_whitespace: false,
+        })}`);
+        console.log(`string : ${
+          newArr[index].bill_time
+        }, \nisEmpty(newArr[index].bill_time, {
+          ignore_whitespace: false,
+        }) : ${isEmpty(newArr[index].bill_time, {
+          ignore_whitespace: false,
+        })}`);
+        if (
+          isEmpty(newArr[index].name, {
+            ignore_whitespace: false,
+          }) &&
+          isEmpty(newArr[index].discount_amount, {
+            ignore_whitespace: false,
+          }) &&
+          isEmpty(newArr[index].bill_time, {
+            ignore_whitespace: false,
+          })
+        ) {
+          console.log("no error in plans :", index);
+        } else {
+          console.log("error in plan : ", index);
+        }
+        await setErrorMessagePlans(newArr);
       });
     } catch (e) {
       console.log("error onErrorHandlePlansGroup  :  ", e.message);
