@@ -54,7 +54,7 @@ const SubscriptionRuleForm = () => {
   const [error_pu_group_name, setError_Pu_Group_Name] = useState("");
   const [error_selected_products, setError_Selected_Products] = useState("");
   const [error_plans_length, setError_plans_length] = useState("");
-  const [errorMessagePlans, setErrorMessagePlans] = useState("");
+  const [errorMessagePlans, setErrorMessagePlans] = useState([]);
   const [pu_group_name, setPu_Group_Name] = useState("");
   const [in_group_name, setIn_Group_Name] = useState("");
   const CustomLinkComponent = ({ children, url, ...rest }) => {
@@ -100,8 +100,6 @@ const SubscriptionRuleForm = () => {
     try {
       data.map(async (data, index) => {
         let newArr = [...errorMessagePlans];
-        let error = 0;
-        console.log("dd : ", data);
         if (
           isEmpty(data.name, {
             ignore_whitespace: false,
@@ -144,27 +142,7 @@ const SubscriptionRuleForm = () => {
             newArr[index].bill_time = "Please enter vaild year number";
           }
         }
-        console.log(`string : ${
-          newArr[index].name
-        }, \nisEmpty(newArr[index].name, {
-          ignore_whitespace: false,
-        }) : ${isEmpty(newArr[index].name, {
-          ignore_whitespace: false,
-        })}`);
-        console.log(`string : ${
-          newArr[index].discount_amount
-        }, \nisEmpty(newArr[index].discount_amount, {
-          ignore_whitespace: false,
-        }) : ${isEmpty(newArr[index].discount_amount, {
-          ignore_whitespace: false,
-        })}`);
-        console.log(`string : ${
-          newArr[index].bill_time
-        }, \nisEmpty(newArr[index].bill_time, {
-          ignore_whitespace: false,
-        }) : ${isEmpty(newArr[index].bill_time, {
-          ignore_whitespace: false,
-        })}`);
+        let newArr1 = [...planGroup];
         if (
           isEmpty(newArr[index].name, {
             ignore_whitespace: false,
@@ -176,14 +154,55 @@ const SubscriptionRuleForm = () => {
             ignore_whitespace: false,
           })
         ) {
-          console.log("no error in plans :", index);
+          // no error in plans
+          newArr1[index].open = false;
+          await setPlanGroup(newArr1);
+          await setErrorMessagePlans(newArr);
         } else {
-          console.log("error in plan : ", index);
+          // error in plans
+          newArr1[index].open = true;
+          await setPlanGroup(newArr1);
+          await setErrorMessagePlans(newArr);
         }
-        await setErrorMessagePlans(newArr);
       });
     } catch (e) {
       console.log("error onErrorHandlePlansGroup  :  ", e.message);
+    }
+  };
+  const checkErrorMessageInPlans = async () => {
+    let error_status = 0;
+    errorMessagePlans.map((data) => {
+      if (
+        !isEmpty(data.name, {
+          ignore_whitespace: false,
+        }) &&
+        !isEmpty(data.discount_amount, {
+          ignore_whitespace: false,
+        }) &&
+        !isEmpty(data.bill_time, {
+          ignore_whitespace: false,
+        })
+      ) {
+        console.log("error in any one plans : ");
+        error_status = 1;
+      } else {
+        return;
+      }
+    });
+    if (error_status) {
+      //error
+      return Promise.resolve(false);
+    } else {
+      //no error
+      return Promise.resolve(true);
+    }
+  };
+  const checkErrorMessage = async () => {
+    try {
+      const result = await checkErrorMessageInPlans();
+      console.log("result  : ", result);
+    } catch (error) {
+      console.log("error in checkErrorMessage : ", error.message);
     }
   };
   const onActionFormMethod = async () => {
@@ -197,7 +216,7 @@ const SubscriptionRuleForm = () => {
     };
     console.log("data : ", data);
     const validation_result = await Form_validation(data);
-
+    await checkErrorMessage();
     // setloadingFlag(true);
     // setInterval(() => {
     // [
