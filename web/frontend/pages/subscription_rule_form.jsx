@@ -65,35 +65,40 @@ const SubscriptionRuleForm = () => {
     );
   };
   const Form_validation = async (e) => {
-    if (
-      isEmpty(e.in_group_name, {
-        ignore_whitespace: false,
-      })
-    ) {
-      setError_In_Group_Name("Internal group name is required");
-    } else {
-      setError_In_Group_Name(null);
-    }
-    if (
-      isEmpty(e.pu_group_name, {
-        ignore_whitespace: false,
-      })
-    ) {
-      setError_Pu_Group_Name("Public group name is required");
-    } else {
-      setError_Pu_Group_Name(null);
-    }
-    if (e.selectedProducts.length <= 0) {
-      setError_Selected_Products("Please select a products");
-    } else {
-      setError_Selected_Products(null);
-    }
-    if (e.plans_length <= 0) {
-      setError_plans_length("Please create one Subscription plans");
-    } else {
-      setError_plans_length(null);
-      await onErrorHandlePlansGroup(e.plans);
-      console.log("errorMessagePlans", errorMessagePlans);
+    try {
+      if (
+        isEmpty(e.in_group_name, {
+          ignore_whitespace: false,
+        })
+      ) {
+        setError_In_Group_Name("Internal group name is required");
+      } else if (
+        isEmpty(e.pu_group_name, {
+          ignore_whitespace: false,
+        })
+      ) {
+        setError_In_Group_Name(null);
+        setError_Pu_Group_Name("Public group name is required");
+      } else if (e.selectedProducts.length <= 0) {
+        setError_Pu_Group_Name(null);
+        setError_In_Group_Name(null);
+        setError_Selected_Products("Please select a products");
+      } else if (e.plans_length <= 0) {
+        setError_Selected_Products(null);
+        setError_Pu_Group_Name(null);
+        setError_In_Group_Name(null);
+        setError_plans_length("Please create one Subscription plans");
+      } else {
+        setError_plans_length(null);
+        setError_Selected_Products(null);
+        setError_Pu_Group_Name(null);
+        setError_In_Group_Name(null);
+        await onErrorHandlePlansGroup(e.plans);
+        return Promise.resolve(true);
+      }
+    } catch (error) {
+      console.log("error : ", error.message);
+      return Promise.reject(false);
     }
   };
   const onErrorHandlePlansGroup = async (data) => {
@@ -169,69 +174,84 @@ const SubscriptionRuleForm = () => {
       console.log("error onErrorHandlePlansGroup  :  ", e.message);
     }
   };
-  const checkErrorMessageInPlans = async () => {
+  const checkErrorMessage = async () => {
     let error_status = 0;
-    errorMessagePlans.map((data) => {
-      if (
-        !isEmpty(data.name, {
-          ignore_whitespace: false,
-        }) &&
-        !isEmpty(data.discount_amount, {
-          ignore_whitespace: false,
-        }) &&
-        !isEmpty(data.bill_time, {
-          ignore_whitespace: false,
-        })
-      ) {
-        console.log("error in any one plans : ");
-        error_status = 1;
-      } else {
-        return;
-      }
-    });
+    if (
+      !isEmpty(error_in_group_name ? error_in_group_name : "", {
+        ignore_whitespace: false,
+      })
+    ) {
+      error_status = 1;
+    } else if (
+      !error_status &&
+      !isEmpty(error_pu_group_name ? error_pu_group_name : "", {
+        ignore_whitespace: false,
+      })
+    ) {
+      error_status = 1;
+    } else if (
+      !error_status &&
+      !isEmpty(error_selected_products ? error_selected_products : "", {
+        ignore_whitespace: false,
+      })
+    ) {
+      error_status = 1;
+    } else if (!error_status && errorMessagePlans.length > 0) {
+      errorMessagePlans.map((data) => {
+        if (error_status === 1) {
+          return;
+        } else {
+          if (
+            isEmpty(data.name, {
+              ignore_whitespace: false,
+            }) &&
+            isEmpty(data.discount_amount, {
+              ignore_whitespace: false,
+            }) &&
+            isEmpty(data.bill_time, {
+              ignore_whitespace: false,
+            })
+          ) {
+            //No error in any one plans
+            error_status = 0;
+          } else {
+            //error in plans
+            error_status = 1;
+          }
+        }
+      });
+    } else {
+      // error for zero plans in form
+      error_status = 0;
+    }
     if (error_status) {
-      //error
-      return Promise.resolve(false);
+      // error
+      return Promise.resolve(true);
     } else {
       //no error
-      return Promise.resolve(true);
-    }
-  };
-  const checkErrorMessage = async () => {
-    try {
-      const result = await checkErrorMessageInPlans();
-      console.log("result  : ", result);
-    } catch (error) {
-      console.log("error in checkErrorMessage : ", error.message);
+      return Promise.resolve(false);
     }
   };
   const onActionFormMethod = async () => {
-    // console.log(productWithSpecificVariantsSelected);
-    const data = {
-      in_group_name: in_group_name,
-      pu_group_name: pu_group_name,
-      selectedProducts: productWithSpecificVariantsSelected,
-      plans_length: planGroup.length,
-      plans: planGroup,
-    };
-    console.log("data : ", data);
-    const validation_result = await Form_validation(data);
-    await checkErrorMessage();
-    // setloadingFlag(true);
-    // setInterval(() => {
-    // [
-    //   {
-    //     name: "",
-    //     everybill: [],
-    //     discount: false,
-    //     discount_type: "",
-    //     discount_amount: "",
-    //   },
-    // ]
-    //   setloadingFlag(false);
-    // }, 2000);
-
-    console.log("sumbit");
+    try {
+      const data = {
+        in_group_name: in_group_name,
+        pu_group_name: pu_group_name,
+        selectedProducts: productWithSpecificVariantsSelected,
+        plans_length: planGroup.length,
+        plans: planGroup,
+      };
+      const validation_result = await Form_validation(data);
+      if (validation_result) {
+        const result = await checkErrorMessage(validation_result);
+        if (!result) {
+          console.log("sumbit");
+          console.log("final data in form : ", data);
+        }
+      }
+    } catch (error) {
+      console.log("onActionFormMethod error: ", error.message);
+    }
   };
   return (
     <>
@@ -306,7 +326,6 @@ const SubscriptionRuleForm = () => {
                   <div style={{ display: "flex" }}>
                     <h1
                       onClick={() => {
-                        console.log("click");
                         setProductShow(!productShow);
                       }}
                       style={{
@@ -327,7 +346,6 @@ const SubscriptionRuleForm = () => {
                   <Button
                     icon={MobilePlusMajor}
                     onClick={() => {
-                      console.log("Clicked add products");
                       setProductModelFlag(true);
                     }}
                   >
@@ -339,7 +357,6 @@ const SubscriptionRuleForm = () => {
                   open={productModelFlag}
                   initialSelectionIds={productWithSpecificVariantsSelected}
                   onSelection={(data) => {
-                    // console.log("selected", data.selection);
                     if (data.selection.length > 0) {
                       let selected_id = [];
                       for (const obj of data.selection) {
@@ -351,7 +368,6 @@ const SubscriptionRuleForm = () => {
                           variants: variants_id,
                         });
                       }
-                      console.log(selected_id);
                       setproductWithSpecificVariantsSelected(selected_id);
                     }
                     setSelectedProduct(data.selection);
@@ -361,7 +377,6 @@ const SubscriptionRuleForm = () => {
                       : "";
                   }}
                   onCancel={() => {
-                    console.log("cancelled");
                     setProductModelFlag(!productModelFlag);
                   }}
                 />
@@ -414,16 +429,9 @@ const SubscriptionRuleForm = () => {
                             <div
                               className="del_div"
                               onClick={() => {
-                                console.log("click event");
-                                console.log("item : ", item.id);
-                                console.log(
-                                  "productWithSpecificVariantsSelected : ",
-                                  productWithSpecificVariantsSelected
-                                );
                                 const index = selectedProduct.findIndex(
                                   (element) => element.id === item.id
                                 );
-                                // console.log("click", index);
                                 let newArr = [...selectedProduct];
                                 newArr.splice(index, 1);
                                 setSelectedProduct(newArr);
@@ -435,7 +443,6 @@ const SubscriptionRuleForm = () => {
                                   productWithSpecificVariantsSelected.findIndex(
                                     (element) => element.id === item.id
                                   );
-                                console.log("click", index_svs);
                                 let newSvs = [
                                   ...productWithSpecificVariantsSelected,
                                 ];
@@ -444,10 +451,6 @@ const SubscriptionRuleForm = () => {
                                 newSvs.length === 0
                                   ? setProductShow(!productShow)
                                   : "";
-                                console.log(
-                                  "productWithSpecificVariantsSelected after: ",
-                                  productWithSpecificVariantsSelected
-                                );
                               }}
                             >
                               <Icon source={DeleteMajor} color="critical" />
@@ -482,7 +485,6 @@ const SubscriptionRuleForm = () => {
                           >
                             <h1
                               onClick={() => {
-                                console.log("click");
                                 let newArr = [...planGroup];
                                 newArr[index].open = !data?.open;
                                 setPlanGroup(newArr);
@@ -501,7 +503,6 @@ const SubscriptionRuleForm = () => {
                             </h1>
                             <h1
                               onClick={() => {
-                                console.log("click", index);
                                 let newArr = [...planGroup];
                                 newArr.splice(index, 1);
                                 setPlanGroup(newArr);
@@ -542,7 +543,6 @@ const SubscriptionRuleForm = () => {
                               <div
                                 className="plan_false_div"
                                 onClick={() => {
-                                  console.log("click");
                                   let newArr = [...planGroup];
                                   newArr[index].open = !data?.open;
                                   setPlanGroup(newArr);
@@ -558,7 +558,6 @@ const SubscriptionRuleForm = () => {
                               <div
                                 className="plan_false_div"
                                 onClick={() => {
-                                  console.log("click", index);
                                   let newArr = [...planGroup];
                                   newArr.splice(index, 1);
                                   setPlanGroup(newArr);
@@ -657,10 +656,6 @@ const SubscriptionRuleForm = () => {
                           >
                             <Toggle
                               onChange={(e) => {
-                                console.log(
-                                  "click switch : ",
-                                  e.target.checked
-                                );
                                 let newArr = [...planGroup];
                                 newArr[index].discount_flag = e.target.checked;
                                 setPlanGroup(newArr);
